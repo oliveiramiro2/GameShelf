@@ -1,5 +1,7 @@
 using GameShelf.Api.Models;
 using GameShelf.Api.Services;
+using GameShelf.Api.DTOs;
+using GameShelf.Api.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// add singletons to use in container of build for serve end point
 builder.Services.AddSingleton<GameService>();
+builder.Services.AddSingleton<CreateGameRequestValidator>();
 
 var app = builder.Build();
 
@@ -15,6 +19,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "GameShelf API v1");
+    });
 }
 
 app.UseHttpsRedirection();
@@ -40,6 +49,26 @@ app.MapGet("/games/{id}", (int id, GameService gameService) =>
     }
 
     return Results.Ok(game);
+});
+
+app.MapPost("/games", (
+    CreateGameRequest request,
+    CreateGameRequestValidator validator,
+    GameService gameService) =>
+{
+    var errors = validator.Validate(request);
+
+    if (errors.Count > 0)
+    {
+        return Results.BadRequest(new
+        {
+            Errors = errors
+        });
+    }
+
+    var game = gameService.Create(request);
+
+    return Results.Created($"/games/{game.Id}", game);
 });
 
 
