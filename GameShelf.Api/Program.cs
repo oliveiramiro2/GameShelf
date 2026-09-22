@@ -1,7 +1,6 @@
 using GameShelf.Api.Models;
 using GameShelf.Api.Services;
 using GameShelf.Api.DTOs;
-using GameShelf.Api.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +10,9 @@ builder.Services.AddOpenApi();
 
 // add singletons to use in container of build for serve end point
 builder.Services.AddSingleton<GameService>();
-builder.Services.AddSingleton<CreateGameRequestValidator>();
+
+// add validations
+builder.Services.AddValidation();
 
 var app = builder.Build();
 
@@ -53,19 +54,8 @@ app.MapGet("/games/{id}", (int id, GameService gameService) =>
 
 app.MapPost("/games", (
     CreateGameRequest request,
-    CreateGameRequestValidator validator,
     GameService gameService) =>
 {
-    var errors = validator.Validate(request);
-
-    if (errors.Count > 0)
-    {
-        return Results.BadRequest(new
-        {
-            Errors = errors
-        });
-    }
-
     var game = gameService.Create(request);
 
     return Results.Created($"/games/{game.Id}", game);
