@@ -1,8 +1,13 @@
+using GameShelf.Api.Models;
+using GameShelf.Api.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddSingleton<GameService>();
 
 var app = builder.Build();
 
@@ -14,28 +19,28 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/hello", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return ".NET API!";
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/games", (GameService gameService) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    return gameService.GetAll();
+});
+
+
+app.MapGet("/games/{id}", (int id, GameService gameService) =>
+{
+    var game = gameService.GetById(id);
+
+    if (game is null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(game);
+});
+
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
