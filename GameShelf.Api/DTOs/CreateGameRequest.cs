@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GameShelf.Api.Validators;
 
 namespace GameShelf.Api.DTOs;
 
@@ -10,6 +11,6 @@ public class CreateGameRequest
   [Required]
   public string Genre { get; set; } = string.Empty;
 
-  [Range(1950, 2026)]
+  [ReleaseYear]
   public int ReleaseYear { get; set; }
 }
