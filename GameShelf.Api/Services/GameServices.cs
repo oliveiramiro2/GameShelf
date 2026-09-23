@@ -1,53 +1,42 @@
 using GameShelf.Api.Models;
 using GameShelf.Api.DTOs;
+using GameShelf.Api.Data;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace GameShelf.Api.Services;
 
 public class GameService
 {
-  private readonly List<Game> _games = new()
-  {
-    new Game
-    {
-        Id = 1,
-        Title = "Hollow Knight",
-        Genre = "Metroidvania",
-        ReleaseYear = 2017
-    },
-    new Game
-    {
-        Id = 2,
-        Title = "Celeste",
-        Genre = "Platformer",
-        ReleaseYear = 2018
-    }
-  };
+  private readonly GameShelfDbContext _context;
 
-  public List<Game> GetAll()
+  public GameService(GameShelfDbContext context)
   {
-    return _games;
+    _context = context;
   }
 
-  public Game? GetById(int id)
+  public async Task<List<Game>> GetAll()
   {
-    return _games.FirstOrDefault(game => game.Id == id);
+    return await _context.Games.ToListAsync();
   }
 
-  public Game Create(CreateGameRequest request)
+  public async Task<Game?> GetById(int id)
   {
-    var nextId = _games.Count == 0
-        ? 1
-        : _games.Max(game => game.Id) + 1;
+    return await _context.Games
+        .FirstOrDefaultAsync(game => game.Id == id);
+  }
 
+  public async Task<Game> Create(CreateGameRequest request)
+  {
     var game = new Game
     {
-      Id = nextId,
       Title = request.Title,
       Genre = request.Genre,
       ReleaseYear = request.ReleaseYear
     };
 
-    _games.Add(game);
+    _context.Games.Add(game);
+    await _context.SaveChangesAsync();
 
     return game;
   }

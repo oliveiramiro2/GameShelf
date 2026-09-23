@@ -1,6 +1,8 @@
-using GameShelf.Api.Models;
 using GameShelf.Api.Services;
 using GameShelf.Api.DTOs;
+using GameShelf.Api.Data;
+
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,11 +10,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// add singletons to use in container of build for serve end point
-builder.Services.AddSingleton<GameService>();
+// add scope's to use in container of build for serve end point
+builder.Services.AddScoped<GameService>();
 
 // add validations
 builder.Services.AddValidation();
+
+// add conection with DB 
+builder.Services.AddDbContext<GameShelfDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("GameShelf")));
 
 var app = builder.Build();
 
@@ -52,11 +59,9 @@ app.MapGet("/games/{id}", (int id, GameService gameService) =>
     return Results.Ok(game);
 });
 
-app.MapPost("/games", (
-    CreateGameRequest request,
-    GameService gameService) =>
+app.MapPost("/games", async (CreateGameRequest request, GameService gameService) =>
 {
-    var game = gameService.Create(request);
+    var game = await gameService.Create(request);
 
     return Results.Created($"/games/{game.Id}", game);
 });
