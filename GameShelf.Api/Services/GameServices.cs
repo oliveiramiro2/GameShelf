@@ -40,4 +40,19 @@ public class GameService
 
     return game;
   }
+
+  public async Task<bool> Delete(int id)
+  {
+    var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
+
+    if (game is null)
+    {
+      return false;
+    }
+
+    _context.Games.Remove(game);
+    await _context.SaveChangesAsync();
+
+    return true;
+  }
 }

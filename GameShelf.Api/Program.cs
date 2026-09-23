@@ -2,12 +2,19 @@ using GameShelf.Api.Services;
 using GameShelf.Api.DTOs;
 using GameShelf.Api.Data;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+});
 builder.Services.AddOpenApi();
 
 // add scope's to use in container of build for serve end point
@@ -41,15 +48,15 @@ app.MapGet("/hello", () =>
     return ".NET API!";
 });
 
-app.MapGet("/games", (GameService gameService) =>
+app.MapGet("/games", async (GameService gameService) =>
 {
-    return gameService.GetAll();
+    return await gameService.GetAll();
 });
 
 
-app.MapGet("/games/{id}", (int id, GameService gameService) =>
+app.MapGet("/games/{id}", async (int id, GameService gameService) =>
 {
-    var game = gameService.GetById(id);
+    var game = await gameService.GetById(id);
 
     if (game is null)
     {
@@ -64,6 +71,17 @@ app.MapPost("/games", async (CreateGameRequest request, GameService gameService)
     var game = await gameService.Create(request);
 
     return Results.Created($"/games/{game.Id}", game);
+});
+
+app.MapDelete("/games/{id}", async (int id, GameService gameService) =>
+{
+    bool isDeleted = await gameService.Delete(id);
+
+    if (isDeleted)
+        return Results.NoContent();
+
+    return Results.NotFound("The game id not found!");
+
 });
 
 
