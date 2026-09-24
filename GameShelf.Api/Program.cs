@@ -52,9 +52,11 @@ app.MapGet("/hello", () =>
     return ".NET API!";
 });
 
-app.MapGet("/games", async (GameService gameService) =>
+app.MapGet("/games", async (
+    GameQueryParameters parameters,
+    GameService gameService) =>
 {
-    return await gameService.GetAll();
+    return await gameService.GetAll(parameters);
 });
 
 

@@ -18,9 +18,74 @@ public class GameService
     _logger = logger;
   }
 
-  public async Task<List<Game>> GetAll()
+  public async Task<PagedResult<Game>> GetAll(GameQueryParameters parameters)
   {
-    return await _context.Games.ToListAsync();
+    var query = _context.Games.AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(parameters.Genre))
+    {
+      query = query.Where(game =>
+          game.Genre.ToLower() == parameters.Genre.ToLower());
+    }
+
+    if (!string.IsNullOrWhiteSpace(parameters.Search))
+    {
+      var search = parameters.Search.ToLower();
+
+      query = query.Where(game =>
+          game.Title.ToLower().Contains(search));
+    }
+
+    var totalItems = await query.CountAsync();
+
+    if (!string.IsNullOrWhiteSpace(parameters.SortBy))
+    {
+      query = parameters.SortBy.ToLower() switch
+      {
+        "title" => parameters.Descending
+            ? query.OrderByDescending(game => game.Title)
+            : query.OrderBy(game => game.Title),
+
+        "genre" => parameters.Descending
+            ? query.OrderByDescending(game => game.Genre)
+            : query.OrderBy(game => game.Genre),
+
+        "releaseyear" => parameters.Descending
+            ? query.OrderByDescending(game => game.ReleaseYear)
+            : query.OrderBy(game => game.ReleaseYear),
+
+        _ => query.OrderBy(game => game.Id)
+      };
+    }
+    else
+    {
+      query = query.OrderBy(game => game.Id);
+    }
+
+    var page = parameters.Page < 1
+        ? 1
+        : parameters.Page;
+
+    var pageSize = parameters.PageSize < 1
+        ? 20
+        : Math.Min(parameters.PageSize, 100);
+
+    var items = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    var totalPages = (int)Math.Ceiling(
+        totalItems / (double)pageSize);
+
+    return new PagedResult<Game>
+    {
+      Items = items,
+      Page = page,
+      PageSize = pageSize,
+      TotalItems = totalItems,
+      TotalPages = totalPages
+    };
   }
 
   public async Task<Game?> GetById(int id)
