@@ -54,7 +54,8 @@ public class GameService
             ? query.OrderByDescending(game => game.ReleaseYear)
             : query.OrderBy(game => game.ReleaseYear),
 
-        _ => query.OrderBy(game => game.Id)
+        _ => throw new ArgumentException(
+            $"Invalid sort field: {parameters.SortBy}")
       };
     }
     else
@@ -62,27 +63,19 @@ public class GameService
       query = query.OrderBy(game => game.Id);
     }
 
-    var page = parameters.Page < 1
-        ? 1
-        : parameters.Page;
-
-    var pageSize = parameters.PageSize < 1
-        ? 20
-        : Math.Min(parameters.PageSize, 100);
+    var totalPages = (int)Math.Ceiling(
+    totalItems / (double)parameters.PageSize);
 
     var items = await query
-        .Skip((page - 1) * pageSize)
-        .Take(pageSize)
+        .Skip((parameters.Page - 1) * parameters.PageSize)
+        .Take(parameters.PageSize)
         .ToListAsync();
-
-    var totalPages = (int)Math.Ceiling(
-        totalItems / (double)pageSize);
 
     return new PagedResult<Game>
     {
       Items = items,
-      Page = page,
-      PageSize = pageSize,
+      Page = parameters.Page,
+      PageSize = parameters.PageSize,
       TotalItems = totalItems,
       TotalPages = totalPages
     };
