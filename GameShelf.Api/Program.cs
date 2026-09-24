@@ -64,7 +64,9 @@ app.MapGet("/games/{id}", async (int id, GameService gameService) =>
 
     if (game is null)
     {
-        return Results.NotFound();
+        return Results.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "Game not found.");
     }
 
     return Results.Ok(game);
@@ -82,7 +84,11 @@ app.MapPut("/games/{id}", async (int id, UpdateGameRequest request, GameService 
     var game = await gameService.Update(id, request);
 
     if (game is null)
-        return Results.NotFound("The game id was not found!");
+    {
+        return Results.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "Game not found.");
+    }
 
     return Results.Ok(game);
 });
@@ -91,11 +97,14 @@ app.MapDelete("/games/{id}", async (int id, GameService gameService) =>
 {
     bool isDeleted = await gameService.Delete(id);
 
-    if (isDeleted)
-        return Results.NoContent();
+    if (!isDeleted)
+    {
+        return Results.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "Game not found.");
+    }
 
-    return Results.NotFound("The game id was not found!");
-
+    return Results.NoContent();
 });
 
 
