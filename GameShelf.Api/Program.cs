@@ -53,7 +53,7 @@ app.MapGet("/hello", () =>
 });
 
 app.MapGet("/games", async (
-    GameQueryParameters parameters,
+    [AsParameters] GameQueryParameters parameters,
     GameService gameService) =>
 {
     return await gameService.GetAll(parameters);
