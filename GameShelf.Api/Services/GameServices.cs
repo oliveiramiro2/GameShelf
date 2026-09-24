@@ -1,7 +1,6 @@
-using GameShelf.Api.Models;
-using GameShelf.Api.DTOs;
 using GameShelf.Api.Data;
-
+using GameShelf.Api.DTOs;
+using GameShelf.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameShelf.Api.Services;
@@ -9,10 +8,14 @@ namespace GameShelf.Api.Services;
 public class GameService
 {
   private readonly GameShelfDbContext _context;
+  private readonly ILogger<GameService> _logger;
 
-  public GameService(GameShelfDbContext context)
+  public GameService(
+      GameShelfDbContext context,
+      ILogger<GameService> logger)
   {
     _context = context;
+    _logger = logger;
   }
 
   public async Task<List<Game>> GetAll()
@@ -22,8 +25,7 @@ public class GameService
 
   public async Task<Game?> GetById(int id)
   {
-    return await _context.Games
-        .FirstOrDefaultAsync(game => game.Id == id);
+    return await _context.Games.FirstOrDefaultAsync(game => game.Id == id);
   }
 
   public async Task<Game> Create(CreateGameRequest request)
@@ -37,6 +39,11 @@ public class GameService
 
     _context.Games.Add(game);
     await _context.SaveChangesAsync();
+
+    _logger.LogInformation(
+        "Game created successfully. GameId: {GameId}, Title: {Title}",
+        game.Id,
+        game.Title);
 
     return game;
   }
@@ -70,6 +77,11 @@ public class GameService
 
     _context.Games.Remove(game);
     await _context.SaveChangesAsync();
+
+    _logger.LogInformation(
+        "Game deleted successfully. GameId: {GameId}, Title: {Title}",
+        game.Id,
+        game.Title);
 
     return true;
   }
