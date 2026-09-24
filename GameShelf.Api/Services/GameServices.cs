@@ -1,6 +1,8 @@
 using GameShelf.Api.Data;
 using GameShelf.Api.DTOs;
 using GameShelf.Api.Models;
+using GameShelf.Api.Exceptions;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace GameShelf.Api.Services;
@@ -54,8 +56,8 @@ public class GameService
             ? query.OrderByDescending(game => game.ReleaseYear)
             : query.OrderBy(game => game.ReleaseYear),
 
-        _ => throw new ArgumentException(
-            $"Invalid sort field: {parameters.SortBy}")
+        _ => throw new InvalidQueryParameterException(
+              $"Invalid sort field: {parameters.SortBy}")
       };
     }
     else
