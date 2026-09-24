@@ -41,6 +41,24 @@ public class GameService
     return game;
   }
 
+  public async Task<Game?> Update(int id, UpdateGameRequest request)
+  {
+    var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
+
+    if (game is null)
+    {
+      return null;
+    }
+
+    game.Title = request.Title;
+    game.Genre = request.Genre;
+    game.ReleaseYear = request.ReleaseYear;
+
+    await _context.SaveChangesAsync();
+
+    return game;
+  }
+
   public async Task<bool> Delete(int id)
   {
     var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == id);

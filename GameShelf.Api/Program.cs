@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Microsoft.EntityFrameworkCore;
+using GameShelf.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +74,16 @@ app.MapPost("/games", async (CreateGameRequest request, GameService gameService)
     return Results.Created($"/games/{game.Id}", game);
 });
 
+app.MapPut("/games/{id}", async (int id, UpdateGameRequest request, GameService gameService) =>
+{
+    var game = await gameService.Update(id, request);
+
+    if (game is null)
+        return Results.NotFound("The game id was not found!");
+
+    return Results.Ok(game);
+});
+
 app.MapDelete("/games/{id}", async (int id, GameService gameService) =>
 {
     bool isDeleted = await gameService.Delete(id);
@@ -80,7 +91,7 @@ app.MapDelete("/games/{id}", async (int id, GameService gameService) =>
     if (isDeleted)
         return Results.NoContent();
 
-    return Results.NotFound("The game id not found!");
+    return Results.NotFound("The game id was not found!");
 
 });
 
