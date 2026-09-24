@@ -1,18 +1,17 @@
 using GameShelf.Api.Services;
 using GameShelf.Api.DTOs;
 using GameShelf.Api.Data;
+using GameShelf.Api.Exceptions;
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
-
 using Microsoft.EntityFrameworkCore;
-using GameShelf.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddProblemDetails();
 
 // Add services to the container.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
