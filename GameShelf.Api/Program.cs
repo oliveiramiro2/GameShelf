@@ -10,6 +10,8 @@ using GameShelf.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddProblemDetails();
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -30,6 +32,8 @@ builder.Services.AddDbContext<GameShelfDbContext>(options =>
         builder.Configuration.GetConnectionString("GameShelf")));
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
