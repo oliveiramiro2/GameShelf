@@ -97,4 +97,46 @@ public class GameServiceTests
     Assert.NotNull(savedGame);
     Assert.Equal(result.Id, savedGame.Id);
   }
+
+  [Fact]
+  public async Task Update_ShouldUpdateAndPersistGame_WhenGameExists()
+  {
+    // Arrange
+    await using var context = CreateContext();
+
+    context.Games.Add(new Game
+    {
+      Id = 1,
+      Title = "Hollow Knight",
+      Genre = "Metroidvania",
+      ReleaseYear = 2017
+    });
+
+    await context.SaveChangesAsync();
+
+    var service = CreateService(context);
+
+    var request = new UpdateGameRequest
+    {
+      Title = "Hollow Knight: Silksong",
+      Genre = "Metroidvania",
+      ReleaseYear = 2025
+    };
+
+    // Act
+    var result = await service.Update(1, request);
+
+    // Assert
+    Assert.NotNull(result);
+    Assert.Equal(1, result.Id);
+    Assert.Equal("Hollow Knight: Silksong", result.Title);
+    Assert.Equal("Metroidvania", result.Genre);
+    Assert.Equal(2025, result.ReleaseYear);
+
+    var savedGame = await context.Games.FirstOrDefaultAsync(game => game.Id == 1);
+
+    Assert.NotNull(savedGame);
+    Assert.Equal("Hollow Knight: Silksong", savedGame.Title);
+    Assert.Equal(2025, savedGame.ReleaseYear);
+  }
 }
