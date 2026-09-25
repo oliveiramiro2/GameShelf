@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GameShelf.Api/GameShelf.Api.csproj" />
+  <Project Path="GameShelf.Tests/GameShelf.Tests.csproj" />
+</Solution>
