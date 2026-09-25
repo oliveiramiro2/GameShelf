@@ -3,20 +3,33 @@ using GameShelf.Api.Models;
 using GameShelf.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameShelf.Tests.Services;
 
 public class GameServiceTests
 {
-  [Fact]
-  public async Task GetById_ShouldReturnGame_WhenGameExists()
+  private static GameService CreateService(GameShelfDbContext context)
   {
-    // Arrange
+    var logger = NullLogger<GameService>.Instance;
+
+    return new GameService(context, logger);
+  }
+
+  private static GameShelfDbContext CreateContext()
+  {
     var options = new DbContextOptionsBuilder<GameShelfDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString())
         .Options;
 
-    await using var context = new GameShelfDbContext(options);
+    return new GameShelfDbContext(options);
+  }
+
+  [Fact]
+  public async Task GetById_ShouldReturnGame_WhenGameExists()
+  {
+    // Arrange
+    await using var context = CreateContext();
 
     context.Games.Add(new Game
     {
@@ -28,10 +41,7 @@ public class GameServiceTests
 
     await context.SaveChangesAsync();
 
-    using var loggerFactory = LoggerFactory.Create(builder => { });
-    var logger = loggerFactory.CreateLogger<GameService>();
-
-    var service = new GameService(context, logger);
+    var service = CreateService(context);
 
     // Act
     var result = await service.GetById(1);
@@ -39,5 +49,20 @@ public class GameServiceTests
     // Assert
     Assert.NotNull(result);
     Assert.Equal("Hollow Knight", result.Title);
+  }
+
+  [Fact]
+  public async Task GetById_ShouldReturnNull_WhenGameDoesNotExist()
+  {
+    // Arrange
+    await using var context = CreateContext();
+
+    var service = CreateService(context);
+
+    // Act
+    var result = await service.GetById(999);
+
+    // Assert
+    Assert.Null(result);
   }
 }
