@@ -161,4 +161,34 @@ public class GameServiceTests
     // Assert
     Assert.Null(result);
   }
+
+  [Fact]
+  public async Task Delete_ShouldDeleteAndPersistGame_WhenGameExists()
+  {
+    // Arrange
+    await using var context = CreateContext();
+
+    context.Games.Add(new Game
+    {
+      Id = 1,
+      Title = "Hollow Knight",
+      Genre = "Metroidvania",
+      ReleaseYear = 2017
+    });
+
+    await context.SaveChangesAsync();
+
+    var service = CreateService(context);
+
+    // Act
+    var result = await service.Delete(1);
+
+    // Assert
+    Assert.True(result);
+
+    var deletedGame = await context.Games
+        .FirstOrDefaultAsync(game => game.Id == 1);
+
+    Assert.Null(deletedGame);
+  }
 }
