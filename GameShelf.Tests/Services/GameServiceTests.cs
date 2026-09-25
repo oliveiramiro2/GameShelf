@@ -1,6 +1,7 @@
 using GameShelf.Api.Data;
 using GameShelf.Api.Models;
 using GameShelf.Api.Services;
+using GameShelf.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -64,5 +65,36 @@ public class GameServiceTests
 
     // Assert
     Assert.Null(result);
+  }
+
+  [Fact]
+  public async Task Create_ShouldCreateAndPersistGame()
+  {
+    // Arrange
+    await using var context = CreateContext();
+
+    var service = CreateService(context);
+
+    var request = new CreateGameRequest
+    {
+      Title = "Hollow Knight",
+      Genre = "Metroidvania",
+      ReleaseYear = 2017
+    };
+
+    // Act
+    var result = await service.Create(request);
+
+    // Assert
+    Assert.NotNull(result);
+    Assert.True(result.Id > 0);
+    Assert.Equal("Hollow Knight", result.Title);
+    Assert.Equal("Metroidvania", result.Genre);
+    Assert.Equal(2017, result.ReleaseYear);
+
+    var savedGame = await context.Games.FirstOrDefaultAsync();
+
+    Assert.NotNull(savedGame);
+    Assert.Equal(result.Id, savedGame.Id);
   }
 }
