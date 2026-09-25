@@ -139,4 +139,26 @@ public class GameServiceTests
     Assert.Equal("Hollow Knight: Silksong", savedGame.Title);
     Assert.Equal(2025, savedGame.ReleaseYear);
   }
+
+  [Fact]
+  public async Task Update_ShouldReturnNull_WhenGameDoesNotExist()
+  {
+    // Arrange
+    await using var context = CreateContext();
+
+    var service = CreateService(context);
+
+    var request = new UpdateGameRequest
+    {
+      Title = "Hollow Knight",
+      Genre = "Metroidvania",
+      ReleaseYear = 2017
+    };
+
+    // Act
+    var result = await service.Update(999, request);
+
+    // Assert
+    Assert.Null(result);
+  }
 }
